@@ -22,7 +22,7 @@
 
 class UItemBase;
 
-UCLASS()
+UCLASS(BlueprintType,Placeable)
 class KAYAKGAME_API AItemActorBase : public AKayakActorBase
 {
 

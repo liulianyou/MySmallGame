@@ -11,6 +11,9 @@
 //Engine Core Include
 #include "UObject/ObjectMacros.h"
 
+//Local include
+#include "UI/UIInterface.h"
+
 //Automatically generated head file
 #include "InventoryDefination.generated.h"
 
@@ -223,16 +226,16 @@ enum EGunType
 {
 	EGunType_LMG 		UMETA( Displayname = "LMG" ),		//Light Machine Gun
 	EGunType_AR			UMETA( DisplayName = "AR" ),		//Assault Rifle
-	EGunType_GRENADA		UMETA( Displayname = "Grenada"),	
+	EGunType_GRENADA	UMETA( Displayname = "Grenada"),	
 	EGunType_HG			UMETA( Displayname = "HG"),			//
-	EGunType_HMG			UMETA( Displayname = "HMG"),
+	EGunType_HMG		UMETA( Displayname = "HMG"),
 	EGunType_FT			UMETA( Displayname = "FT"),
 	EGunType_RL			UMETA( Displayname = "RL"),
 	EGunType_SG			UMETA( Displayname = "SG"),
-	EGunType_SMG			UMETA( Displayname = "SMG"),		//Small Machine Gun 
+	EGunType_SMG		UMETA( Displayname = "SMG"),		//Small Machine Gun 
 	EGunType_SR			UMETA( Displayname = "SR"),			//Snipe rife
 	//Reserve to calculate the max number of this enumeration
-	EGunType_Max			UMETA( Displayname = "Max Count")
+	EGunType_Max		UMETA( Displayname = "Max Count")
 };	
 
 //Different items can have different accessories to improve their attributes
@@ -252,7 +255,7 @@ enum EAccessoryType
 	EAccessoryType_Vehicle		UMETA( DisplayName = "Vehicle Accessory" ),
 
 	//Reserve to calculate the max number of this enumeration
-	EAccessoryType_Max		UMETA(Displayname = "Max Count")
+	EAccessoryType_Max			UMETA(Displayname = "Max Count")
 
 };
 
@@ -324,4 +327,28 @@ struct FWeaponMiniRecoverInfo : public FItemBaseMiniRecoverInfo
 
 	UPROPERTY(EditAnywhere)
 	INT ItemLevel;
+};
+
+
+/*
+* Used to recorder the simple data of items from local csv file.
+* As these data is not import adn it will not be transfered from server to client.
+*/
+USTRUCT()
+struct FItemSimpleInfo : public FTableRowBase
+{
+	GENERATED_USTRUCT_BODY()
+
+
+	UPROPERTY()
+	INT ItemID;
+
+	UPROPERTY()
+	FString ItemNameLabel;
+
+	UPROPERTY()
+	FString ItemDescriptionLabel;
+
+	UPROPERTY()
+	FIconDetails ItemIcon;
 };

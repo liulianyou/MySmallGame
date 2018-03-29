@@ -46,12 +46,14 @@ enum EEquipSlot
 
 
 UCLASS(Config=Item)
-class KAYAKGAME_API UInventoryManager : public UObject
+class KAYAKGAME_API UInventoryManager : public UActorComponent
 {
 public:
 	GENERATED_UCLASS_BODY()
 
-	
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	/*
 	* AS Unreal Engine 4 will instance each class derived from UObjec in the memory used to store the information of each class.
 	* We can't use the default construct function to construct this class, so use this function if need to initialize one instance.
@@ -145,6 +147,18 @@ public:
 	* Create ItemActor by the target UClass which stands for all the classes derived from AItemActorBase
 	*/
 	AItemActorBase* CreateItemActor(TSubclassOf<AItemActorBase> ItemActorNativeClass) { return nullptr; }
+
+	/*
+	* Create one item actor through the ItemID
+	*/
+	UFUNCTION(BlueprintCallable,Category=("Kayak|Pawn|Inventory"))
+	static AItemActorBase* CreateitemActor( INT ItemID, TSharedPtr<UObject> owner = nullptr ) {}
+
+	/*
+	* Create one item derived from ItemBase through the ItemID
+	*/
+	UFUNCTION(BlueprintCallable, Category = ("Kayak|Pawn|Inventory"))
+	static UItemBase* Createitem( INT ItemID, TSharedPtr<UObject> owner = nullptr) {}
 
 protected:
 

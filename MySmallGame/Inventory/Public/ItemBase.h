@@ -13,10 +13,12 @@
 
 //Local include
 #include "InventoryDefination.h"
-#include "UI/UIInterface.h"
+
 
 //Automatically generated head file
 #include "ItemBase.generated.h"
+
+
 
 
 UCLASS(Config = Item)
@@ -47,16 +49,31 @@ public:
 	FString GetItemGUID() const { return m_ItemGUID; }
 
 
+	/*
+	* Get all the data table of simple information
+	*/
+	static UDataTable* GetItemSimpleInfoDataTable() { return UItemBase::s_ItemSimpleInfoBuffer; }
+
+	/*
+	* I don't find any function in TMap that can use lambada so Use this function to get ItemSimpleInfo;
+	*/
+	static const FItemSimpleInfo* GetItemSimpleInfoByItemID(INT ItemID);
 
 #pragma endregion ProperitiesGet
 
+
+#pragma region ProperitiesSet
+
+	void SetOwner(UObject* owner) { m_pOwner = owner; };
+
 	/*
-	* Initialize the item's attributes.
+	* Set the default minimum information of item.
 	* When the server create new item or transfer one item to client, they first transfer the mini data to reduce the bindwidth,
 	* If the client need the full inforamtion of Item, the client should use the UpdateContent() to get all information
 	*/
-	virtual void InitializeContent( const FItemBaseMiniRecoverInfo* itemBaseRecoverInfo);
+	virtual void SetMinimumInfo(const FItemBaseMiniRecoverInfo* itemBaseRecoverInfo);
 
+#pragma endregion ProperitiesSet
 
 	/*
 	* Get the full information of this item from the server.
@@ -69,7 +86,16 @@ public:
 	virtual void DropFromBag() {};
 	virtual void Disintegrage() {};
 
+
+
 protected:
+
+private:
+
+	/*
+	* Get config value from different config files suchas CSV files, json files;
+	*/
+	static void InitSimpleDataInfo();
 
 private:
 
@@ -96,7 +122,7 @@ private:
 
 	//The owner of this class instance; mostly it refers to the pawn who owned it.
 	UPROPERTY(Transient)
-	TSharedPtr<UObject> m_pOwner;
+	UObject* m_pOwner;
 
 	//the class name of items which will used to spawn Actor in the real world.
 	FString m_BindActorItemClassName;
@@ -141,17 +167,7 @@ private:
 	//If the member m_Stackable is false, the max value of this member is 1;
 	INT m_ItemMaxStackNumber;
 
-
-	struct ItemSimpleInfo
-	{
-		INT ItemID;
-
-		FString ItemNameLabel;
-
-		FString ItemDescriptionLabel;
-	};
-
-	//Store the simple information of items which is read from /Game/
-	static TArray<ItemSimpleInfo> m_ItemSimpleInfoBuffer;
+	//Store the simple information of items which is read from /Game/Config/Jason
+	static UDataTable* s_ItemSimpleInfoBuffer;
 
 };
