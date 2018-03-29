@@ -2,11 +2,18 @@
 
 //Engine include: Internet interface
 #include "Net/UnrealNetwork.h"
+//Engine include: File System
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Engine/DataTable.h"
+#include "Engine/DataTableCSV.h"
 
 //Local Include
 #include "../Public/ItemBase.h"
 #include "../Public/ItemActorBase.h"
 
+
+UDataTable* UInventoryManager::s_TotalItemDataTable = nullptr;
 
 UInventoryManager::UInventoryManager(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer),
@@ -17,6 +24,8 @@ UInventoryManager::UInventoryManager(const FObjectInitializer& ObjectInitializer
 	m_maxBagSize(0)
 {
 
+	UInventoryManager::InitTotalItemInfo();
+
 }
 
 void UInventoryManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -26,22 +35,58 @@ void UInventoryManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(UInventoryManager, m_pOwner);
 }
 
-AItemActorBase* UInventoryManager::CreateitemActor(INT ItemID, TSharedPtr<UObject> owner)
+AItemActorBase* UInventoryManager::ServerCreateItemActor(INT ItemID, UObject* owner)
 {
 	//Get Item's simple information form server according to ItemID
-	FItemBaseMiniRecoverInfo* ItemMiniRecoverInfo;
+	FItemBaseMiniRecoverInfo* ItemMiniRecoverInfo = nullptr;
 	//Create one ItemBase which will be used to create
 	UItemBase* ItemBase = NewObject<UItemBase>();
-	ItemBase->SetOwner(owner.Get());
+	ItemBase->SetOwner(owner);
 	ItemBase->SetMinimumInfo(ItemMiniRecoverInfo);
 	ItemBase->GetRealWorldItemClassName();
 
 	ItemBase->ConditionalBeginDestroy();
 
 
-
+	return nullptr;
 }
 
+//This function will not have any effect in client side
+void UInventoryManager::InitTotalItemInfo()
+{
+	if (s_TotalItemDataTable != nullptr) return;
 
+	bool Caninit = false;
+
+#ifdef WITH_EDITOR
+	Caninit = true;
+#endif
+
+	s_TotalItemDataTable = NewObject<UDataTable>();
+
+	s_TotalItemDataTable->RowStruct = FItemFullInfo::StaticStruct();
+
+	FString CSVString;
+	if (!FFileHelper::LoadFileToString(CSVString, *(FPaths::ProjectDir() / TEXT("Config/ItemFullInfo.csv"))))
+	{
+		//Should do some exception hand here
+		return;
+	}
+	TArray<FString> Problems;
+	Problems = s_TotalItemDataTable->CreateTableFromCSVString(CSVString);
+
+	for (auto it : s_TotalItemDataTable->RowMap)
+	{
+		FItemFullInfo* itemFullInfo = reinterpret_cast<FItemFullInfo*>(it.Value);
+		int a = 0;
+	}
+
+
+	if (Problems.Num() != 0)
+	{
+		//Should do some exception hand here
+		return;
+	}
+}
 
 

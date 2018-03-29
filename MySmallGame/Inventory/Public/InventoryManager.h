@@ -149,24 +149,37 @@ public:
 	AItemActorBase* CreateItemActor(TSubclassOf<AItemActorBase> ItemActorNativeClass) { return nullptr; }
 
 	/*
-	* Create one item actor through the ItemID
+	* Create one item actor through the ItemID on server side
 	*/
-	UFUNCTION(BlueprintCallable,Category=("Kayak|Pawn|Inventory"))
-	static AItemActorBase* CreateitemActor( INT ItemID, TSharedPtr<UObject> owner = nullptr ) {}
+	UFUNCTION(BlueprintCallable, Category = "Kayak|Pawn|Inventory|Server")
+	AItemActorBase* ServerCreateItemActor(INT ItemID, UObject* owner = nullptr);
 
 	/*
-	* Create one item derived from ItemBase through the ItemID
+	* Create one item actor through the ItemID on client side
 	*/
-	UFUNCTION(BlueprintCallable, Category = ("Kayak|Pawn|Inventory"))
-	static UItemBase* Createitem( INT ItemID, TSharedPtr<UObject> owner = nullptr) {}
+	UFUNCTION(BlueprintCallable, Category = "Kayak|Pawn|Inventory|Server")
+	AItemActorBase* ClientCreateItemActor(FString ItemActorClassName, UObject* owner = nullptr) { return nullptr; };
+
+	/*
+	* Create one item derived from ItemBase through the ItemID on server side
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Kayak|Pawn|Inventory")
+	UItemBase* ServerCreateitem(INT ItemID, UObject* owner = nullptr) { return nullptr; }
 
 protected:
+
+	/*
+	* Initialize the member s_TotalItemDataTable which will not be used in the client side. 
+	* 
+	* @see s_TotalItemDataTable
+	*/
+	static void InitTotalItemInfo();
 
 
 private:
 
 	//The owner of this class instance. 
-	TSharedPtr<UObject> m_pOwner;
+	UObject* m_pOwner;
 
 	//Store all items which derived from UItemBase
 	TArray<UItemBase*> m_ItemList;
@@ -183,5 +196,10 @@ private:
 
 	//The max size of bag in this Inventory of each character
 	INT m_maxBagSize;
+
+	//This member will store all the items attributes in csv file.
+	//It will only exit in dedicated server, PIE or the host local game.
+	//the client should not read the full item attributes directly from the config file, instead they should get these values from server.
+	static UDataTable* s_TotalItemDataTable;
 
 };

@@ -13,14 +13,18 @@
 //Local include
 #include "Public/InventoryDefination.h"
 
+#include "InventoryInterface.generated.h"
 
 UCLASS(BlueprintType)
-class KAYAKGAME_API InventoryInterface : public UObject
+class KAYAKGAME_API UInventoryInterface : public UObject
 {
 
 public:
+
+	GENERATED_UCLASS_BODY()
 	
-	static KAYAGAME_API const UDataTable* GetItemSimpleInfoDataType() {};
+	//UFUNCTION()
+	//const UDataTable* GetItemSimpleInfoDataType() { return nullptr; };
 
 
 

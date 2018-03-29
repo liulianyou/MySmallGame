@@ -17,6 +17,34 @@
 //Automatically generated head file
 #include "InventoryDefination.generated.h"
 
+#define GENERATEDENUM(X)	FOREACH_ENUM_##X
+
+#define TOSTRING(X)		#X
+
+#define ENUMSTRING(X)	TOSTRING(X)
+
+#define ENUMERATIONTOSTRING(X)	ENUMSTRING(GENERATEDENUM(X)(""))
+
+#define SEARCHINENUMERATION(enumType, enumeration)	\
+static FString enumType##StringValue = ENUMERATIONTOSTRING(enumType);\
+if (enumType##StringValue.Contains(enumeration))\
+{\
+	int index = enumType##StringValue.Find(enumeration);\
+	int serachStartIndex = 0;\
+	int count = 0;\
+	do\
+	{\
+		serachStartIndex = enumType##StringValue.Find("(",ESearchCase::IgnoreCase,ESearchDir::FromStart, serachStartIndex);\
+		if( serachStartIndex != INDEX_NONE )\
+		{\
+			count++;\
+			serachStartIndex++;\
+		}\
+		if (serachStartIndex > index) break;\
+	}while(serachStartIndex != -1);\
+	if (serachStartIndex != -1) return serachStartIndex - 1;\
+}
+
 /*
 * The hierarchy of item type.
 * Total members in this struct is refer to the max hierarchy of item type
@@ -60,6 +88,37 @@ struct FItemTypeHierarchy
 		else return false;
 	}
 
+};
+
+
+/*
+* This struct is used to store the value come from config file;
+* Difference between FItemTypeHierarchy and FItemTypeHierarchy is value type in different struct.
+* 
+* @see FItemTypeHierarchy
+*
+* I want to exporse the enumeration of different item to designer, so that they can write the enumeration in the config file directly.
+* There two addvantages:
+*	1): We can read the config file more easily to identify each items type.
+*	2): We can maintain the config file more easily when the enumeration's value is changed.
+*/
+
+USTRUCT()
+struct FItemTypeHierarchyString : public FTableRowBase
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditAnywhere)
+	FString FirstLayer;
+
+	UPROPERTY(EditAnywhere)
+	FString SecondLayer;
+
+	UPROPERTY(EditAnywhere)
+	FString ThirdLayer;
+
+	UPROPERTY(EditAnywhere)
+	FString Fourthlayer;
 };
 
 
@@ -331,24 +390,126 @@ struct FWeaponMiniRecoverInfo : public FItemBaseMiniRecoverInfo
 
 
 /*
-* Used to recorder the simple data of items from local csv file.
+* Used to recorder the simple data of items from local csv file which the client can read it directly
 * As these data is not import adn it will not be transfered from server to client.
+*
+* Notice: This struct is not the part of struct of FItemFullInfo, we combine the two struct to represent the total item attributes
 */
 USTRUCT()
 struct FItemSimpleInfo : public FTableRowBase
 {
 	GENERATED_USTRUCT_BODY()
 
-
+	//@see ItemBase::m_ItemID
 	UPROPERTY()
 	INT ItemID;
 
+	//@see ItemBase::m_ItemNameLabel
 	UPROPERTY()
 	FString ItemNameLabel;
 
+	//@see ItemBase::m_ItemDescriptionLabel
 	UPROPERTY()
 	FString ItemDescriptionLabel;
 
+	//@see ItemBase::m_ItemIcon
 	UPROPERTY()
 	FIconDetails ItemIcon;
 };
+
+/*
+* Used to record the information from the config file which only can be accessed by server, local host, PIE
+*/
+USTRUCT(BlueprintType)
+struct FItemFullInfo : public FTableRowBase
+{
+	GENERATED_USTRUCT_BODY()
+
+	//@see ItemBase::m_ItemType
+	UPROPERTY()
+	FItemTypeHierarchyString ItemType;
+
+	//This property will calcuated from the ItemType in the delegate function: OnPostDataImport
+	FItemTypeHierarchy iItemType;
+
+	//@see ItemBase::m_BindActorItemClassName
+	UPROPERTY()
+	FString	BindActorItemClassName;
+
+	//@see ItemBase::m_ItemDefaultPrice
+	UPROPERTY()
+	INT ItemDefaultPrice;
+
+	//@see ItemBase::m_Deleteable
+	UPROPERTY()
+	bool Deleteable;
+
+	//@see ItemBase::m_CanBeSpawned
+	UPROPERTY()
+	bool CanBeSpawned;
+
+	//@see ItemBase::m_Stackable
+	UPROPERTY()
+	bool Stackable;
+
+	//@see ItemBase::m_DeletedAfterSpawnActor
+	UPROPERTY()
+	bool DeletedAfterSpawnActor;
+
+	//@see ItemBase::m_IsUnique
+	UPROPERTY()
+	bool IsUnique;
+
+	//@see ItemBase::m_ItemMaxStackNumber
+	UPROPERTY()
+	INT ItemMaxStackNumber;
+
+
+	virtual void OnPostDataImport(const UDataTable* InDataTable, const FName InRowName, TArray<FString>& OutCollectedImportProblems) override
+	{
+		Super::OnPostDataImport(InDataTable, InRowName, OutCollectedImportProblems);
+	
+		iItemType.FirstLayer = ConventEnumerationStringToIntValue(ItemType.FirstLayer);
+		iItemType.SecondLayer = ConventEnumerationStringToIntValue(ItemType.SecondLayer);
+		iItemType.ThirdLayer = ConventEnumerationStringToIntValue(ItemType.ThirdLayer);
+		iItemType.Fourthlayer = ConventEnumerationStringToIntValue(ItemType.Fourthlayer);
+	}
+
+private:
+
+	INT FItemFullInfo::ConventEnumerationStringToIntValue(FString enumeration)
+	{
+		//static FString EInventroyTypeStringValue = ENUMERATIONTOSTRING(EINVENTROYTYPE);
+		//if (EInventroyTypeStringValue.Contains(enumeration))
+		//{
+		//	int index = EInventroyTypeStringValue.Find(enumeration);
+		//	int serachStartIndex = INDEX_NONE;
+		//	int count = 0;
+		//	do
+		//	{
+		//		serachStartIndex = EInventroyTypeStringValue.Find("(", ESearchCase::IgnoreCase, ESearchDir::FromStart, serachStartIndex);
+		//		if (serachStartIndex != INDEX_NONE)
+		//		{
+		//			count++;
+		//			serachStartIndex++;
+		//		}
+		//		if (serachStartIndex > index) break;
+		//	} while (serachStartIndex != -1);
+
+		//	if (serachStartIndex != -1) return EInventroyType(count - 1);
+		//}
+		SEARCHINENUMERATION(EINVENTROYTYPE, enumeration)
+		SEARCHINENUMERATION(ECONSUMABLETYPE, enumeration)
+		SEARCHINENUMERATION(EUNCONSUMABLETYPE, enumeration)
+		SEARCHINENUMERATION(ECAPSULETYPE, enumeration)
+		SEARCHINENUMERATION(EWEAPONTYPE, enumeration)
+		SEARCHINENUMERATION(EGUNTYPE, enumeration)
+		SEARCHINENUMERATION(EACCESSORYTYPE, enumeration)
+
+		return -1;
+	}
+
+};
+
+
+
