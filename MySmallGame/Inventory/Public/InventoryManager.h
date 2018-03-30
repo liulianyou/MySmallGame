@@ -155,7 +155,7 @@ public:
 	AItemActorBase* ServerCreateItemActor(INT ItemID, UObject* owner = nullptr);
 
 	/*
-	* Create one item actor through the ItemID on client side
+	* Call client to create one ItemActor
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Kayak|Pawn|Inventory|Server")
 	AItemActorBase* ClientCreateItemActor(FString ItemActorClassName, UObject* owner = nullptr) { return nullptr; };
@@ -164,7 +164,7 @@ public:
 	* Create one item derived from ItemBase through the ItemID on server side
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Kayak|Pawn|Inventory")
-	UItemBase* ServerCreateitem(INT ItemID, UObject* owner = nullptr) { return nullptr; }
+	UItemBase* ServerCreateItem(INT ItemID, UObject* owner = nullptr) { return nullptr; }
 
 protected:
 

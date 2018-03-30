@@ -2,6 +2,7 @@
 
 //Engine include: Internet interface
 #include "Net/UnrealNetwork.h"
+#include "OnlineSubsystem.h"
 //Engine include: File System
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -56,20 +57,21 @@ void UInventoryManager::InitTotalItemInfo()
 {
 	if (s_TotalItemDataTable != nullptr) return;
 
-	bool Caninit = false;
+	bool CanInit = false;
 
-#ifdef WITH_EDITOR
-	Caninit = true;
-#endif
+	if(GIsClient ) CanInit = false;
+	if(GIsServer || (GIsEditor&&GIsClient))  CanInit = true;
+
+	if (!CanInit) return;
 
 	s_TotalItemDataTable = NewObject<UDataTable>();
-
+	 
 	s_TotalItemDataTable->RowStruct = FItemFullInfo::StaticStruct();
 
 	FString CSVString;
 	if (!FFileHelper::LoadFileToString(CSVString, *(FPaths::ProjectDir() / TEXT("Config/ItemFullInfo.csv"))))
 	{
-		//Should do some exception hand here
+		//Should do some exception handler here
 		return;
 	}
 	TArray<FString> Problems;
@@ -81,12 +83,13 @@ void UInventoryManager::InitTotalItemInfo()
 		int a = 0;
 	}
 
-
 	if (Problems.Num() != 0)
 	{
-		//Should do some exception hand here
+		//Should do some exception handler here
 		return;
 	}
 }
+
+
 
 

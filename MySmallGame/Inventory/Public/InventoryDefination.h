@@ -25,24 +25,28 @@
 
 #define ENUMERATIONTOSTRING(X)	ENUMSTRING(GENERATEDENUM(X)(""))
 
+/*
+* Try to get the actual int value from FString which value is one enumeration
+*
+* @enumType this value is the capitial enumation type eg. EInventoryType -> EINVENTORYTYPE
+* @enumeration the FString of enumeration type eg. EInventoryType_Unconsumable
+*/
 #define SEARCHINENUMERATION(enumType, enumeration)	\
 static FString enumType##StringValue = ENUMERATIONTOSTRING(enumType);\
 if (enumType##StringValue.Contains(enumeration))\
 {\
 	int index = enumType##StringValue.Find(enumeration);\
-	int serachStartIndex = 0;\
-	int count = 0;\
+	int serachStartIndex = INDEX_NONE;\
+	int count = INDEX_NONE;\
 	do\
 	{\
 		serachStartIndex = enumType##StringValue.Find("(",ESearchCase::IgnoreCase,ESearchDir::FromStart, serachStartIndex);\
-		if( serachStartIndex != INDEX_NONE )\
-		{\
-			count++;\
-			serachStartIndex++;\
-		}\
+		count++; \
+		if( serachStartIndex != INDEX_NONE ) serachStartIndex++;\
+		else break;\
 		if (serachStartIndex > index) break;\
-	}while(serachStartIndex != -1);\
-	if (serachStartIndex != -1) return serachStartIndex - 1;\
+	}while(serachStartIndex != INDEX_NONE);\
+	if (count >= 1) return count - 1;\
 }
 
 /*
@@ -425,6 +429,10 @@ struct FItemFullInfo : public FTableRowBase
 {
 	GENERATED_USTRUCT_BODY()
 
+	//@see ItemBase::m_ItemID
+	UPROPERTY()
+	INT ItemID;
+
 	//@see ItemBase::m_ItemType
 	UPROPERTY()
 	FItemTypeHierarchyString ItemType;
@@ -465,6 +473,8 @@ struct FItemFullInfo : public FTableRowBase
 	INT ItemMaxStackNumber;
 
 
+
+
 	virtual void OnPostDataImport(const UDataTable* InDataTable, const FName InRowName, TArray<FString>& OutCollectedImportProblems) override
 	{
 		Super::OnPostDataImport(InDataTable, InRowName, OutCollectedImportProblems);
@@ -479,36 +489,17 @@ private:
 
 	INT FItemFullInfo::ConventEnumerationStringToIntValue(FString enumeration)
 	{
-		//static FString EInventroyTypeStringValue = ENUMERATIONTOSTRING(EINVENTROYTYPE);
-		//if (EInventroyTypeStringValue.Contains(enumeration))
-		//{
-		//	int index = EInventroyTypeStringValue.Find(enumeration);
-		//	int serachStartIndex = INDEX_NONE;
-		//	int count = 0;
-		//	do
-		//	{
-		//		serachStartIndex = EInventroyTypeStringValue.Find("(", ESearchCase::IgnoreCase, ESearchDir::FromStart, serachStartIndex);
-		//		if (serachStartIndex != INDEX_NONE)
-		//		{
-		//			count++;
-		//			serachStartIndex++;
-		//		}
-		//		if (serachStartIndex > index) break;
-		//	} while (serachStartIndex != -1);
 
-		//	if (serachStartIndex != -1) return EInventroyType(count - 1);
-		//}
 		SEARCHINENUMERATION(EINVENTROYTYPE, enumeration)
 		SEARCHINENUMERATION(ECONSUMABLETYPE, enumeration)
-		SEARCHINENUMERATION(EUNCONSUMABLETYPE, enumeration)
 		SEARCHINENUMERATION(ECAPSULETYPE, enumeration)
+		SEARCHINENUMERATION(EUNCONSUMABLETYPE, enumeration)
 		SEARCHINENUMERATION(EWEAPONTYPE, enumeration)
 		SEARCHINENUMERATION(EGUNTYPE, enumeration)
 		SEARCHINENUMERATION(EACCESSORYTYPE, enumeration)
 
 		return -1;
 	}
-
 };
 
 
