@@ -15,6 +15,7 @@
 
 #include "InventoryInterface.generated.h"
 
+
 UCLASS(BlueprintType)
 class KAYAKGAME_API UInventoryInterface : public UObject
 {

@@ -104,3 +104,25 @@ const FItemSimpleInfo* UItemBase::GetItemSimpleInfoByItemID(INT ItemID)
 
 	return nullptr;
 }
+
+
+void UItemBase::UpdateAttributsFromJsonString(FString JsonString)
+{
+	FItemBaseInfo* Iteminfo = new FItemBaseInfo();
+
+	Iteminfo->DeSerializeJsonString(JsonString);
+	m_Deleteable				= Iteminfo->Deleteable;
+	m_CanBeSpawned				= Iteminfo->CanBeSpawned;
+	m_Stackable					= Iteminfo->Stackable;
+	m_DeletedAfterSpawnActor	= Iteminfo->DeletedAfterSpawnActor;
+	m_IsUnique					= Iteminfo->IsUnique;
+	m_BindActorItemClassName	= Iteminfo->BindActorItemClassName;
+	m_ItemGUID					= Iteminfo->ItemGUID;
+	m_DurationTime				= Iteminfo->DurationTime;
+	m_CreateTime				= Iteminfo->Deleteable;
+	m_ItemNumber				= Iteminfo->ItemNumber;
+	m_ItemMaxStackNumber		= Iteminfo->ItemMaxStackNumber;
+	m_ItemDefaultPrice			= Iteminfo->ItemDefaultPrice;
+}
+
+

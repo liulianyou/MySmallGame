@@ -31,9 +31,30 @@ class KAYAKGAME_API AItemActorBase : public AKayakActorBase
 public:
 
 	/*
+	* Static function to create one item Actor;
+	*/
+	static AItemActorBase* CreateItemActor(const FItemBaseInfo* itemInfo = nullptr, UObject* owner = nullptr);
+
+	/*
+	* Static function to create on item actor with the ItemBase class 
+	*/
+	static AItemActorBase* CreateItemActor(const UItemBase* itemBase = nullptr, UObject* owner = nullptr);
+
+
+	/*
 	* Initialize form ItemBase Class when the player use the Item through UI which item's type is the children of UItemBase
 	*/
-	virtual void Initialzie( const UItemBase* ItemBase = nullptr);
+	virtual void Initialize(const UItemBase* ItemBase = nullptr, UObject* owner = nullptr);
+
+
+	/*
+	* Initialize one item directly from ItemFullInfo struct
+	*/
+	virtual void Initialize(const FItemBaseInfo* itemInfo = nullptr, UObject* owner = nullptr);
+
+	UFUNCTION(Client, Reliable)
+	virtual void ClientDoInitialize(const FString& itemInfo, UObject* pOwner = nullptr);
+
 
 protected:
 
@@ -53,6 +74,7 @@ private:
 
 	//The owner of this class instance; mostly it refers to the pawn who owned it.
 	//If this value is nullptr means this item is belong to the level
+	//This owner is not the same as Owner in AActor class. this member is refered to the pawn who own it.
 	APawn* m_pOwner;
 
 	//Default price of this item when the player sell it to NPC, each item's actual price should be change according to its environment.

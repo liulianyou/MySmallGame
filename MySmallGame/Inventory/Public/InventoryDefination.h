@@ -10,6 +10,7 @@
 
 //Engine Core Include
 #include "UObject/ObjectMacros.h"
+#include "Json.h"
 
 //Local include
 #include "UI/UIInterface.h"
@@ -48,6 +49,9 @@ if (enumType##StringValue.Contains(enumeration))\
 	}while(serachStartIndex != INDEX_NONE);\
 	if (count >= 1) return count - 1;\
 }
+
+//Declare the inventory log channel
+KAYAKGAME_API DECLARE_LOG_CATEGORY_EXTERN(LogInventory, Log, All);
 
 /*
 * The hierarchy of item type.
@@ -124,7 +128,6 @@ struct FItemTypeHierarchyString : public FTableRowBase
 	UPROPERTY(EditAnywhere)
 	FString Fourthlayer;
 };
-
 
 
 /**
@@ -336,6 +339,20 @@ enum EGunAccessoryType
 	EGunAccessoryType_Max				UMETA(Displayname = "Max Count")
 };
 
+/*
+* The eunumeration of different type of price.
+*/
+UENUM(BlueprintType)
+enum EItemPriceType
+{
+	EItemPriceType_Copper				UMETA(Displayname = "Copper"), 
+	EItemPriceType_Sliver				UMETA(Displayname = "Sliver"), 
+	EItemPriceType_Gold					UMETA(Displayname = "Gold"), 
+	EItemPriceType_Diamond				UMETA(Displayname = "Diamond"), 
+
+	//Reserve to calculate the max number of this enumeration
+	EItemPriceType_Max				UMETA(Displayname = "Max Count")
+};
 
 
 /*
@@ -397,7 +414,7 @@ struct FWeaponMiniRecoverInfo : public FItemBaseMiniRecoverInfo
 * Used to recorder the simple data of items from local csv file which the client can read it directly
 * As these data is not import adn it will not be transfered from server to client.
 *
-* Notice: This struct is not the part of struct of FItemFullInfo, we combine the two struct to represent the total item attributes
+* Notice: This struct is not the part of struct of FItemBaseInfo, we combine the two struct to represent the total item attributes
 */
 USTRUCT()
 struct FItemSimpleInfo : public FTableRowBase
@@ -421,17 +438,24 @@ struct FItemSimpleInfo : public FTableRowBase
 	FIconDetails ItemIcon;
 };
 
+
+typedef TJsonWriterFactory< TCHAR, TCondensedJsonPrintPolicy<TCHAR> > FCondensedJsonStringWriterFactory;
+typedef TJsonWriter< TCHAR, TCondensedJsonPrintPolicy<TCHAR> > FCondensedJsonStringWriter;
+
+typedef TJsonWriterFactory< TCHAR, TPrettyJsonPrintPolicy<TCHAR> > FPrettyJsonStringWriterFactory;
+typedef TJsonWriter< TCHAR, TPrettyJsonPrintPolicy<TCHAR> > FPrettyJsonStringWriter;
+
 /*
 * Used to record the information from the config file which only can be accessed by server, local host, PIE
 */
 USTRUCT(BlueprintType)
-struct FItemFullInfo : public FTableRowBase
+struct FItemBaseInfo : public FTableRowBase
 {
 	GENERATED_USTRUCT_BODY()
 
 	//@see ItemBase::m_ItemID
 	UPROPERTY()
-	INT ItemID;
+	int ItemID;
 
 	//@see ItemBase::m_ItemType
 	UPROPERTY()
@@ -446,7 +470,7 @@ struct FItemFullInfo : public FTableRowBase
 
 	//@see ItemBase::m_ItemDefaultPrice
 	UPROPERTY()
-	INT ItemDefaultPrice;
+	TMap<TEnumAsByte<EItemPriceType>, uint32> ItemDefaultPrice;
 
 	//@see ItemBase::m_Deleteable
 	UPROPERTY()
@@ -468,39 +492,141 @@ struct FItemFullInfo : public FTableRowBase
 	UPROPERTY()
 	bool IsUnique;
 
+	//this value should set manually as it should be cetaed at run time or load form other save files.
+	//The csv file or other config files will not contain this value.
+	UPROPERTY()
+	double DurationTime;
+
 	//@see ItemBase::m_ItemMaxStackNumber
 	UPROPERTY()
-	INT ItemMaxStackNumber;
+	int ItemMaxStackNumber;
 
+	//This value should be transient as it only be create at runtime or load from other save files.
+	//This value can only be set mannuly, the csv file which the tablerow process will not contain this information
+	FString ItemGUID;
 
+	//this value should set manually as it should be cetaed at run time or load form other save files.
+	//The csv file or other config files will not contain this value.
+	double CreateTime;
 
+	//this value should set manually as it should be cetaed at run time or load form other save files.
+	//The csv file or other config files will not contain this value.
+	int ItemNumber;
 
+	/*
+	* Callback function, it will be called after the UDataTable has processed the csv file.
+	*/
 	virtual void OnPostDataImport(const UDataTable* InDataTable, const FName InRowName, TArray<FString>& OutCollectedImportProblems) override
 	{
 		Super::OnPostDataImport(InDataTable, InRowName, OutCollectedImportProblems);
-	
+
 		iItemType.FirstLayer = ConventEnumerationStringToIntValue(ItemType.FirstLayer);
 		iItemType.SecondLayer = ConventEnumerationStringToIntValue(ItemType.SecondLayer);
 		iItemType.ThirdLayer = ConventEnumerationStringToIntValue(ItemType.ThirdLayer);
 		iItemType.Fourthlayer = ConventEnumerationStringToIntValue(ItemType.Fourthlayer);
 	}
 
+	/*
+	* Try to create one JsonString to contain the attributs which cannot be read from client.
+	*
+	* Mostly this function is called on server to prepare the data to transfer to client.
+	*
+	* @param attributsInfo	the attributs value that we will used to create one json value.
+	*
+	*/
+	virtual FString CreateJsonStringForAttributs() const
+	{
+		FString OutputString;
+		TSharedRef< FCondensedJsonStringWriter > Writer = FCondensedJsonStringWriterFactory::Create(&OutputString);
+		TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
+
+		JsonObject->SetBoolField(FString(TEXT("Deleteable")), this->Deleteable);
+		JsonObject->SetBoolField(FString(TEXT("CanBeSpawned")), this->CanBeSpawned);
+		JsonObject->SetBoolField(FString(TEXT("Stackable")), this->Stackable);
+		JsonObject->SetBoolField(FString(TEXT("DeletedAfterSpawnActor")), this->DeletedAfterSpawnActor);
+		JsonObject->SetBoolField(FString(TEXT("IsUnique")), this->IsUnique);
+
+		JsonObject->SetStringField(FString(TEXT("BindActorItemClassName")), this->BindActorItemClassName);
+		JsonObject->SetStringField(FString(TEXT("ItemGUID")), this->ItemGUID);
+
+		JsonObject->SetNumberField(FString(TEXT("DurationTime")), this->DurationTime);
+		JsonObject->SetNumberField(FString(TEXT("CreateTime")), this->CreateTime);
+		JsonObject->SetNumberField(FString(TEXT("ItemNumber")), this->ItemNumber);
+		JsonObject->SetNumberField(FString(TEXT("ItemMaxStackNumber")), this->ItemMaxStackNumber);
+
+		TSharedPtr<FJsonObject> DefaultPriceJsonObject = MakeShareable( new FJsonObject() );
+		for (auto it : this->ItemDefaultPrice)
+		{
+			CHAR name[128];
+			FMemory::Memset(name, 0x00);
+			sprintf_s(name, "%d", it.Key.GetValue());
+			DefaultPriceJsonObject->SetNumberField(FString(name), it.Value);
+		}
+		JsonObject->SetObjectField(FString(TEXT("ItemDefaultPrice")), DefaultPriceJsonObject);
+
+		check(FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer));
+
+		DefaultPriceJsonObject.Reset();
+
+		JsonObject.Reset();
+
+		return OutputString;
+	}
+
+	virtual FItemBaseInfo* DeSerializeJsonString(FString& JsonString)
+	{
+		TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(JsonString);
+		TSharedPtr<FJsonObject> JsonObject;
+
+		check(FJsonSerializer::Deserialize(Reader, JsonObject));
+		check(JsonObject.IsValid());
+
+		if (JsonObject->HasField(FString(TEXT("Deleteable"))))
+			Deleteable = JsonObject->GetBoolField(FString(TEXT("Deleteable")));
+		if (JsonObject->HasField(FString(TEXT("CanBeSpawned"))))
+			CanBeSpawned = JsonObject->GetBoolField(FString(TEXT("CanBeSpawned")));
+		if (JsonObject->HasField(FString(TEXT("Stackable"))))
+			Stackable = JsonObject->GetBoolField(FString(TEXT("Stackable")));
+		if (JsonObject->HasField(FString(TEXT("DeletedAfterSpawnActor"))))
+			DeletedAfterSpawnActor = JsonObject->GetBoolField(FString(TEXT("DeletedAfterSpawnActor")));
+		if (JsonObject->HasField(FString(TEXT("IsUnique"))))
+			IsUnique = JsonObject->GetBoolField(FString(TEXT("IsUnique")));
+
+		JsonObject->TryGetStringField(FString(TEXT("BindActorItemClassName")), BindActorItemClassName);
+		JsonObject->TryGetStringField(FString(TEXT("ItemGUID")), ItemGUID);
+		JsonObject->TryGetNumberField(FString(TEXT("DurationTime")), DurationTime);
+		JsonObject->TryGetNumberField(FString(TEXT("CreateTime")), CreateTime);
+		JsonObject->TryGetNumberField(FString(TEXT("ItemNumber")), ItemNumber);
+		JsonObject->TryGetNumberField(FString(TEXT("ItemMaxStackNumber")), ItemMaxStackNumber);
+
+		const TSharedPtr<FJsonObject>* ItemDefaultPirceObject;
+		JsonObject->TryGetObjectField(FString(TEXT("ItemDefalutPrice")), ItemDefaultPirceObject);
+
+		check(ItemDefaultPirceObject->IsValid());
+
+		for (int i = 0; i < EItemPriceType::EItemPriceType_Max; i++)
+		{
+			char name[128];
+			FMemory::Memset(name, 0x00);
+			sprintf_s(name, "%d", i);
+			int price = 0;
+			if (ItemDefaultPirceObject->Get()->TryGetNumberField(FString(name), price))
+				ItemDefaultPrice.Add(EItemPriceType(i), price);
+		}
+		return this;
+	}
+
 private:
 
-	INT FItemFullInfo::ConventEnumerationStringToIntValue(FString enumeration)
+	INT FItemBaseInfo::ConventEnumerationStringToIntValue(FString enumeration)
 	{
-
 		SEARCHINENUMERATION(EINVENTROYTYPE, enumeration)
-		SEARCHINENUMERATION(ECONSUMABLETYPE, enumeration)
-		SEARCHINENUMERATION(ECAPSULETYPE, enumeration)
-		SEARCHINENUMERATION(EUNCONSUMABLETYPE, enumeration)
-		SEARCHINENUMERATION(EWEAPONTYPE, enumeration)
-		SEARCHINENUMERATION(EGUNTYPE, enumeration)
-		SEARCHINENUMERATION(EACCESSORYTYPE, enumeration)
-
-		return -1;
+			SEARCHINENUMERATION(ECONSUMABLETYPE, enumeration)
+			SEARCHINENUMERATION(ECAPSULETYPE, enumeration)
+			SEARCHINENUMERATION(EUNCONSUMABLETYPE, enumeration)
+			SEARCHINENUMERATION(EWEAPONTYPE, enumeration)
+			SEARCHINENUMERATION(EGUNTYPE, enumeration)
+			SEARCHINENUMERATION(EACCESSORYTYPE, enumeration)
+			return -1;
 	}
 };
-
-
-

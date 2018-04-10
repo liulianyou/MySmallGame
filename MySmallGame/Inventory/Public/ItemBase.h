@@ -19,8 +19,6 @@
 #include "ItemBase.generated.h"
 
 
-
-
 UCLASS(Config = Item)
 class KAYAKGAME_API UItemBase : public UObject
 {
@@ -31,7 +29,7 @@ public:
 	FItemTypeHierarchy GetItemType() const { return m_ItemType; }
 
 	UFUNCTION(BlueprintCallable, Category = "Kayak|Item|Base")
-	FString GetRealWorldItemClassName() { UpdateContent(); return m_BindActorItemClassName; }
+	FString GetBindItemActorClassName() const { return m_BindActorItemClassName; }
 
 	UFUNCTION(BlueprintCallable, Category = "Kayak|Item|Base")
 	FIconDetails GetIconInfo() const { return m_ItemIconInfo; }
@@ -86,7 +84,13 @@ public:
 	virtual void DropFromBag() {};
 	virtual void Disintegrage() {};
 
-
+	/*
+	* Try to update the attributs which need to request value from server
+	*
+	* @param	JsonString	String with the JSON format. 
+	*						this value contans all the data that the client cann't read from local drectly.
+	*/
+	virtual void UpdateAttributsFromJsonString(FString JsonString);
 
 protected:
 
@@ -100,7 +104,7 @@ private:
 private:
 
 	//ID of Item
-	INT m_ItemID;
+	uint32 m_ItemID;
 
 	//The unique identification of the Item.
 	UPROPERTY(Transient)
@@ -130,30 +134,30 @@ private:
 	//Default price of this item when the player sell it to NPC, each item's actual price should be change according to its environment.
 	//Such as different NPC have different price to pay for the same item. 
 	//If this value is -1 which means this item can't be sold, the player only destroy it by delete it if the member m_Deletable is true
-	INT m_ItemDefaultPrice;
+	TMap<TEnumAsByte<EItemPriceType>, uint32> m_ItemDefaultPrice;
 
 	//Check weather this item can be deleted by the player.
 	//If one item can't be deleted just means the player can't sell it, drop it, or disintegrate it.
-	INT m_Deleteable : 1;
+	uint32 m_Deleteable : 1;
 	
 	//Flag to check weather the player can spawn this item with the m_BindActorItemClass.
-	INT m_CanBeSpawned : 1;
+	uint32 m_CanBeSpawned : 1;
 
 	//Weather this item is stackable 
-	INT m_Stackable : 1;
+	uint32 m_Stackable : 1;
 
 	//Try to config weather should delete this item When the player use it create ItemActor in world.
-	INT m_DeletedAfterSpawnActor : 1;
+	uint32 m_DeletedAfterSpawnActor : 1;
 
 	//If the value is true means on character in the game only have one instance of the class derived from ItemBase.
-	INT m_IsUnique : 1;
+	uint32 m_IsUnique : 1;
 
 	//Millisecond to represent the total duration time of this item
 	//-1 means the owner can own this item for ever
-	INT64 m_DurationTime;
+	double m_DurationTime;
 
 	//Millisecond to represent for creation time.
-	INT64 m_CreateTime;
+	double m_CreateTime;
 
 	//The main type of this item, this value come form the m_ItemType
 	FItemTypeHierarchy m_ItemType;
@@ -161,13 +165,12 @@ private:
 	//the total number of this items
 	//If the member m_Stackable is false the max value of this member is 1;
 	//If this member's value is zero we should delete this item
-	INT m_ItemNumber;
+	uint32 m_ItemNumber;
 
 	//the max number of this item can be stacked in bag or any other container
 	//If the member m_Stackable is false, the max value of this member is 1;
-	INT m_ItemMaxStackNumber;
+	uint32 m_ItemMaxStackNumber;
 
 	//Store the simple information of items which is read from /Game/Config/Jason
 	static UDataTable* s_ItemSimpleInfoBuffer;
-
 };

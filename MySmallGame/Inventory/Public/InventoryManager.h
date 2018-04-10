@@ -20,6 +20,7 @@
 //Generated file included
 #include "InventoryManager.generated.h"
 
+
 class UItemBase;
 
 
@@ -150,15 +151,22 @@ public:
 
 	/*
 	* Create one item actor through the ItemID on server side
+	*
+	* @param ItemID		the target items's ID
+	* @param Owner		owner of this Item, this is different from the member Owner in Actor, as the onwer member in Actor is mostly used in net.
+	*					the value here is represent for the other things such as the inventorymanager of pawn
+	* @param Number		The total number that need to be created
+	*
+	* @return			The array of item actors been created.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Kayak|Pawn|Inventory|Server")
-	AItemActorBase* ServerCreateItemActor(INT ItemID, UObject* owner = nullptr);
+	TArray<AItemActorBase*> CreateItemActor(INT ItemID, UObject* Owner = nullptr, INT Number = 1 );
 
 	/*
 	* Call client to create one ItemActor
 	*/
-	UFUNCTION(BlueprintCallable, Category = "Kayak|Pawn|Inventory|Server")
-	AItemActorBase* ClientCreateItemActor(FString ItemActorClassName, UObject* owner = nullptr) { return nullptr; };
+	UFUNCTION(Client, Reliable)
+	void ClientDoCreateItemActor(const FString& ItemAttributesJsonValue, UObject* owner = nullptr, INT Number = 1 );
 
 	/*
 	* Create one item derived from ItemBase through the ItemID on server side
@@ -166,20 +174,28 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Kayak|Pawn|Inventory")
 	UItemBase* ServerCreateItem(INT ItemID, UObject* owner = nullptr) { return nullptr; }
 
+	/*
+	* Try to get the full item information which is only exit in the server
+	*/
+	FItemBaseInfo* GetItemInfo(int ItemID);
+
+	//FItemBaseMiniRecoverInfo* GetItemBaseMinRecoverInfo(INT ItemID, FString ItemGUID);
+
 protected:
 
 	/*
-	* Initialize the member s_TotalItemDataTable which will not be used in the client side. 
+	* Initialize the member s_ItemBaseDataTable which will not be used in the client side. 
 	* 
-	* @see s_TotalItemDataTable
+	* @see s_ItemBaseDataTable
 	*/
 	static void InitTotalItemInfo();
 
 
 private:
 
-	//The owner of this class instance. 
-	UObject* m_pOwner;
+	static void ReadCSVConfigFile(FString path, UStruct* structInfo);
+
+private:
 
 	//Store all items which derived from UItemBase
 	TArray<UItemBase*> m_ItemList;
@@ -195,11 +211,13 @@ private:
 	TMap<EEquipSlot, AItemActorBase*> m_EquipmentList;
 
 	//The max size of bag in this Inventory of each character
+	UPROPERTY(Replicated)
 	INT m_maxBagSize;
 
-	//This member will store all the items attributes in csv file.
+	//This member will store all the items attributes in csv file which use the {@struct FItemBaseInfo} and its substruct as templete.
 	//It will only exit in dedicated server, PIE or the host local game.
 	//the client should not read the full item attributes directly from the config file, instead they should get these values from server.
-	static UDataTable* s_TotalItemDataTable;
+	static UDataTable* s_ItemBaseDataTable;
+	//static TArray<FItemBaseInfo*> s_ItemBaseDataTable;
 
 };
