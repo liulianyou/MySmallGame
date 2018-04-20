@@ -2,7 +2,7 @@
 
 //Engine include: Internet interface
 #include "Net/UnrealNetwork.h"
-#include "OnlineSubsystem.h"
+#include "Engine/ActorChannel.h"
 //Engine include: File System
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -31,7 +31,7 @@ UInventoryManager::UInventoryManager(const FObjectInitializer& ObjectInitializer
 }
 
 /*
-* As the InventoryManager is the one compoenent and it should be replicated stand along, so we should register the replicated properties here
+* As the InventoryManager is the one component and it should be replicated stand along, so we should register the replicated properties here
 *
 * When you create new subObject with InventoryManager in other Object you should call function SetIsReplicated(true), 
 * more details see : https://docs.unrealengine.com/en-US/Gameplay/Networking/Actors/Components
@@ -41,6 +41,8 @@ void UInventoryManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UInventoryManager, m_maxBagSize);
+
+	DOREPLIFETIME(UInventoryManager, m_ItemBaseDebug);
 }
 
 TArray<AItemActorBase*> UInventoryManager::CreateItemActor(INT ItemID, UObject* Owner, INT Number)
@@ -53,18 +55,17 @@ TArray<AItemActorBase*> UInventoryManager::CreateItemActor(INT ItemID, UObject* 
 	ItemFullInfo->CreateTime = FApp::GetCurrentTime();
 	for (int i = 0; i < Number; i++)
 	{
-		//As ItemActor can be showed in the world so the enterties of the same templete should have different GUID to disinteguish them.
+		//As ItemActor can be showed in the world so the entries of the same templete should have different GUID to disinteguish them.
 		ItemFullInfo->ItemGUID = FGuid::NewGuid().ToString();
 
 		result.Emplace(AItemActorBase::CreateItemActor(ItemFullInfo, Owner));
 
-		ClientDoCreateItemActor(ItemFullInfo->CreateJsonStringForAttributs(), Owner);
 	}
 
 	return result;
 }
 
-void UInventoryManager::ClientDoCreateItemActor_Implementation(const FString& ItemAttributesJsonValue, UObject* owner, INT Number = 1)
+void UInventoryManager::OnRep_MaxBagSize()
 {
 	int a = 0;
 	a++;
@@ -92,8 +93,8 @@ void UInventoryManager::InitTotalItemInfo()
 	bool CanInit = false;
 
 	//Make should this function only work in Server side or in PIE which is not in client mode,
-	//As this function is call in construction of this class and when UE4 preInit it will instance all the function which is refected in building, 
-	//at that time the Net and other game mode may be not be initialized, we just can use the golobal variable to identify which mode is current engine running.
+	//As this function is call in construction of this class and when UE4 preInit it will instance all the function which is reflected in building, 
+	//at that time the Net and other game mode may be not be initialized, we just can use the global variable to identify which mode is current engine running.
 	if(GIsClient ) CanInit = false;
 	if(GIsServer || (GIsEditor&&GIsClient))  CanInit = true;
 
@@ -138,7 +139,15 @@ void UInventoryManager::ReadCSVConfigFile(FString path, UStruct* structInfo)
 	}
 }
 
+/** Method that allows an Actor to replicate subobjects on its Actor channel */
+bool UInventoryManager::ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags)
+{
+	bool writeSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
 
+	if(m_ItemBaseDebug!= nullptr)
+		writeSomething |= Channel->ReplicateSubobject(m_ItemBaseDebug, *Bunch, *RepFlags);
 
+	return writeSomething ;
+}
 
 

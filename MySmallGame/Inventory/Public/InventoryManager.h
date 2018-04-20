@@ -41,7 +41,7 @@ enum EEquipSlot
 	EEquipSlot_Foot					UMETA(DisplayName = "Foot"),
 
 	//Reserve to calculate the max number of this enumeration
-	EEquipSlot_MAX				UMETA(Displayname = "Max Count")
+	EEquipSlot_MAX					UMETA(Displayname = "Max Count")
 };
 
 
@@ -163,12 +163,6 @@ public:
 	TArray<AItemActorBase*> CreateItemActor(INT ItemID, UObject* Owner = nullptr, INT Number = 1 );
 
 	/*
-	* Call client to create one ItemActor
-	*/
-	UFUNCTION(Client, Reliable)
-	void ClientDoCreateItemActor(const FString& ItemAttributesJsonValue, UObject* owner = nullptr, INT Number = 1 );
-
-	/*
 	* Create one item derived from ItemBase through the ItemID on server side
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Kayak|Pawn|Inventory")
@@ -180,6 +174,21 @@ public:
 	FItemBaseInfo* GetItemInfo(int ItemID);
 
 	//FItemBaseMiniRecoverInfo* GetItemBaseMinRecoverInfo(INT ItemID, FString ItemGUID);
+	UPROPERTY(Replicated)
+	UItemBase* m_ItemBaseDebug = nullptr;
+
+public:
+		
+	/** Method that allows an Actor to replicate subobjects on its Actor channel */
+	virtual bool ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags);
+
+
+protected:
+
+	/** Replication Notification Callbacks */
+	UFUNCTION()
+	virtual void OnRep_MaxBagSize();
+
 
 protected:
 
@@ -195,7 +204,10 @@ private:
 
 	static void ReadCSVConfigFile(FString path, UStruct* structInfo);
 
+
 private:
+
+	
 
 	//Store all items which derived from UItemBase
 	TArray<UItemBase*> m_ItemList;
@@ -211,7 +223,7 @@ private:
 	TMap<EEquipSlot, AItemActorBase*> m_EquipmentList;
 
 	//The max size of bag in this Inventory of each character
-	UPROPERTY(Replicated)
+	UPROPERTY(replicatedUsing = OnRep_MaxBagSize)
 	INT m_maxBagSize;
 
 	//This member will store all the items attributes in csv file which use the {@struct FItemBaseInfo} and its substruct as templete.

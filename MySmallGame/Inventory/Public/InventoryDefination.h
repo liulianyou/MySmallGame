@@ -513,6 +513,16 @@ struct FItemBaseInfo : public FTableRowBase
 	//The csv file or other config files will not contain this value.
 	int ItemNumber;
 
+
+
+	/*
+	* Convert and return a json Object string
+	*/
+	FString ToString() const 
+	{
+		return CreateJsonStringForAttributs();
+	}
+
 	/*
 	* Callback function, it will be called after the UDataTable has processed the csv file.
 	*/
@@ -527,14 +537,24 @@ struct FItemBaseInfo : public FTableRowBase
 	}
 
 	/*
-	* Try to create one JsonString to contain the attributs which cannot be read from client.
+	* Override by subclass to add its own variable to json string, this function should be map to DeSeializeJsonString
+	*/
+	virtual void GenerateJsonString(TSharedPtr<FJsonObject>& JsonObject) const {}
+
+	/*
+	* Override by subclass to deserialize Json string  to variables, this function should be map to GenerateJsonString
+	*/
+	virtual void DeSeializeJsonString(TSharedPtr<FJsonObject>& JsonObject) {}
+
+	/*
+	* Try to create one JsonString to contain the attributes which cannot be read from client.
 	*
 	* Mostly this function is called on server to prepare the data to transfer to client.
 	*
-	* @param attributsInfo	the attributs value that we will used to create one json value.
+	* @param attributsInfo	the attributes value that we will used to create one json value.
 	*
 	*/
-	virtual FString CreateJsonStringForAttributs() const
+	FString CreateJsonStringForAttributs() const
 	{
 		FString OutputString;
 		TSharedRef< FCondensedJsonStringWriter > Writer = FCondensedJsonStringWriterFactory::Create(&OutputString);
@@ -564,6 +584,8 @@ struct FItemBaseInfo : public FTableRowBase
 		}
 		JsonObject->SetObjectField(FString(TEXT("ItemDefaultPrice")), DefaultPriceJsonObject);
 
+		GenerateJsonString(JsonObject);
+
 		check(FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer));
 
 		DefaultPriceJsonObject.Reset();
@@ -573,7 +595,7 @@ struct FItemBaseInfo : public FTableRowBase
 		return OutputString;
 	}
 
-	virtual FItemBaseInfo* DeSerializeJsonString(FString& JsonString)
+	FItemBaseInfo* DeSerializeJsonStringToAttributes(FString& JsonString)
 	{
 		TSharedRef< TJsonReader<> > Reader = TJsonReaderFactory<>::Create(JsonString);
 		TSharedPtr<FJsonObject> JsonObject;
@@ -613,6 +635,9 @@ struct FItemBaseInfo : public FTableRowBase
 			if (ItemDefaultPirceObject->Get()->TryGetNumberField(FString(name), price))
 				ItemDefaultPrice.Add(EItemPriceType(i), price);
 		}
+
+		DeSeializeJsonString(JsonObject);
+
 		return this;
 	}
 
@@ -621,12 +646,12 @@ private:
 	INT FItemBaseInfo::ConventEnumerationStringToIntValue(FString enumeration)
 	{
 		SEARCHINENUMERATION(EINVENTROYTYPE, enumeration)
-			SEARCHINENUMERATION(ECONSUMABLETYPE, enumeration)
-			SEARCHINENUMERATION(ECAPSULETYPE, enumeration)
-			SEARCHINENUMERATION(EUNCONSUMABLETYPE, enumeration)
-			SEARCHINENUMERATION(EWEAPONTYPE, enumeration)
-			SEARCHINENUMERATION(EGUNTYPE, enumeration)
-			SEARCHINENUMERATION(EACCESSORYTYPE, enumeration)
-			return -1;
+		SEARCHINENUMERATION(ECONSUMABLETYPE, enumeration)
+		SEARCHINENUMERATION(ECAPSULETYPE, enumeration)
+		SEARCHINENUMERATION(EUNCONSUMABLETYPE, enumeration)
+		SEARCHINENUMERATION(EWEAPONTYPE, enumeration)
+		SEARCHINENUMERATION(EGUNTYPE, enumeration)
+		SEARCHINENUMERATION(EACCESSORYTYPE, enumeration)
+		return -1;
 	}
 };

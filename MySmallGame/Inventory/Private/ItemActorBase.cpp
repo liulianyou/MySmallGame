@@ -7,7 +7,10 @@
 AItemActorBase::AItemActorBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-
+	//Replication
+	bReplicates = true;
+	//bAlwaysRelevant = true;
+	//bReplicateMovement = true;
 }
 
 void AItemActorBase::Initialize(const UItemBase* ItemBase, UObject* owner)
@@ -17,7 +20,7 @@ void AItemActorBase::Initialize(const UItemBase* ItemBase, UObject* owner)
 
 void AItemActorBase::Initialize(const FItemBaseInfo* itemInfo, UObject* owner)
 {
-	ClientDoInitialize(itemInfo->CreateJsonStringForAttributs(), owner);
+	ClientDoInitialize(itemInfo->ToString(), owner);
 }
 
 void AItemActorBase::ClientDoInitialize_Implementation(const FString& itemInfo, UObject* owner = nullptr)
@@ -30,9 +33,12 @@ AItemActorBase* AItemActorBase::CreateItemActor(const FItemBaseInfo* itemInfo, U
 {
 	UClass* nativeItemActorClass = StaticLoadClass(AItemActorBase::StaticClass(), NULL, *(FString("/Script/KayakGame.") + itemInfo->BindActorItemClassName), NULL, LOAD_Quiet, NULL);
 
-	AItemActorBase* result = NewObject<AItemActorBase>(GetTransientPackage(), nativeItemActorClass);
+	FActorSpawnParameters params;
+	params.Owner = (AActor*)(Owner);
+	params.Name = TEXT("LIULIANYOU_ItemActorBase");
+	AItemActorBase* result = params.Owner->GetWorld()->SpawnActor<AItemActorBase>(nativeItemActorClass, params);
 
-	result->Initialize(itemInfo);
+	result->Initialize(itemInfo, Owner);
 
 	return result;
 }

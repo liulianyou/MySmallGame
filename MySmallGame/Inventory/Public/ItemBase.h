@@ -13,7 +13,7 @@
 
 //Local include
 #include "InventoryDefination.h"
-
+#include "ItemActorBase.h"
 
 //Automatically generated head file
 #include "ItemBase.generated.h"
@@ -23,6 +23,9 @@ UCLASS(Config = Item)
 class KAYAKGAME_API UItemBase : public UObject
 {
 	GENERATED_UCLASS_BODY()
+
+
+
 public:
 #pragma region ProperitiesGet
 	UFUNCTION(BlueprintCallable, Category = "Kayak|Item|Base" )
@@ -92,6 +95,19 @@ public:
 	*/
 	virtual void UpdateAttributsFromJsonString(FString JsonString);
 
+	/** This signifies the attribute set can be ID'd by name over the network. */
+	void SetNetAddressable();
+
+	bool IsNameStableForNetworking() const override;
+
+	bool IsSupportedForNetworking() const override{ return true; }
+
+	UFUNCTION(Client, Reliable)
+	void DoSomething( int debugValue );
+
+	UPROPERTY(Replicated)
+	int DebugNetValue;
+
 protected:
 
 private:
@@ -127,6 +143,10 @@ private:
 	//The owner of this class instance; mostly it refers to the pawn who owned it.
 	UPROPERTY(Transient)
 	UObject* m_pOwner;
+
+	//The target ItemActor that this Item refer to.
+	UPROPERTY(Transient)
+	AItemActorBase* m_ItemActor;
 
 	//the class name of items which will used to spawn Actor in the real world.
 	FString m_BindActorItemClassName;
@@ -171,6 +191,10 @@ private:
 	//If the member m_Stackable is false, the max value of this member is 1;
 	uint32 m_ItemMaxStackNumber;
 
+	/** Is this Item safe to ID over the network by name?  */
+	uint32 m_NetAddressable : 1;
+
 	//Store the simple information of items which is read from /Game/Config/Jason
 	static UDataTable* s_ItemSimpleInfoBuffer;
+
 };

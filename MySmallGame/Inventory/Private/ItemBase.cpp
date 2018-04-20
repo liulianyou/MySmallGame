@@ -5,6 +5,7 @@
 #include "Engine/DataTableCSV.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Net/UnrealNetwork.h"
 
 UDataTable* UItemBase::s_ItemSimpleInfoBuffer = nullptr;
 
@@ -15,11 +16,26 @@ UItemBase::UItemBase(const FObjectInitializer& ObjectInitializer)
 	m_ItemID(-1),
 	m_ItemNameLabel(FString("")),
 	m_ItemDescriptionLabel(FString("")),
-	m_NeedToUpdateContent(false)
+	m_NeedToUpdateContent(false),
+	m_NetAddressable(false)
 {
 	//Put it here so that the static members ItemSimpleInfo can be initialized when the engine is starting.
 	UItemBase::InitSimpleDataInfo();
 
+}
+
+
+/*
+* As the InventoryManager is the one component and it should be replicated stand along, so we should register the replicated properties here
+*
+* When you create new subObject with InventoryManager in other Object you should call function SetIsReplicated(true),
+* more details see : https://docs.unrealengine.com/en-US/Gameplay/Networking/Actors/Components
+*/
+void UItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UItemBase, DebugNetValue);
 }
 
 void UItemBase::SetMinimumInfo( const FItemBaseMiniRecoverInfo* itemMiniData)
@@ -110,7 +126,7 @@ void UItemBase::UpdateAttributsFromJsonString(FString JsonString)
 {
 	FItemBaseInfo* Iteminfo = new FItemBaseInfo();
 
-	Iteminfo->DeSerializeJsonString(JsonString);
+	Iteminfo->DeSerializeJsonStringToAttributes(JsonString);
 	m_Deleteable				= Iteminfo->Deleteable;
 	m_CanBeSpawned				= Iteminfo->CanBeSpawned;
 	m_Stackable					= Iteminfo->Stackable;
@@ -125,4 +141,27 @@ void UItemBase::UpdateAttributsFromJsonString(FString JsonString)
 	m_ItemDefaultPrice			= Iteminfo->ItemDefaultPrice;
 }
 
+void UItemBase::SetNetAddressable()
+{
+	m_NetAddressable = true;
+}
 
+bool UItemBase::IsNameStableForNetworking() const
+{
+	/**
+	* IsNameStableForNetworking means an item can be referred to its path name (relative to owning AActor*) over the network
+	*
+	* Items are net addressable if:
+	*	-They are Default Subobjects (created in C++ constructor)
+	*	-They were loaded directly from a package (placed in map actors)
+	*	-They were explicitly set to bNetAddressable
+	*/
+	return m_NetAddressable || Super::IsNameStableForNetworking();
+}
+
+
+void UItemBase::DoSomething_Implementation(int DebugValue)
+{
+	int a = 0; 
+	a++;
+}
