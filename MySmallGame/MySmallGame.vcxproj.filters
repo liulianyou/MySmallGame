@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Inventory">
+      <UniqueIdentifier>{7829e000-b053-4405-8d3b-d7da8160bd2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{f21bec52-5e16-4f75-b687-73509ddea06d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Inventory\Private">
+      <UniqueIdentifier>{4866c5f5-7ddf-4c88-9700-3b3f92e8b91d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Inventory\Public">
+      <UniqueIdentifier>{32391afb-26be-42c6-8e36-0b00e7869819}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\Private">
+      <UniqueIdentifier>{8b5681c3-21ef-4ef1-947a-34dacaa088ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI\Public">
+      <UniqueIdentifier>{aabc08fc-fe88-4b12-9271-230298c6dfe2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ui\UIInterface.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\private\UIBase.cpp">
+      <Filter>UI\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\private\UILogIn.cpp">
+      <Filter>UI\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\private\UIManage.cpp">
+      <Filter>UI\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="inventory\InventoryInterface.cpp">
+      <Filter>Inventory\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="inventory\private\ItemActorBase.cpp">
+      <Filter>Inventory\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="inventory\private\ItemBase.cpp">
+      <Filter>Inventory\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="inventory\private\InventoryManager.cpp">
+      <Filter>Inventory</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ui\UIInterface.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\public\UIManage.h">
+      <Filter>UI\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\public\UILogIn.h">
+      <Filter>UI\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\public\UIInterfaceDefination.h">
+      <Filter>UI\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\public\UIBase.h">
+      <Filter>UI\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="inventory\public\ItemBase.h">
+      <Filter>Inventory\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="inventory\public\InventoryDefination.h">
+      <Filter>Inventory\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="inventory\InventoryInterface.h">
+      <Filter>Inventory\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="inventory\public\ItemActorBase.h">
+      <Filter>Inventory\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="inventory\public\InventoryManager.h">
+      <Filter>Inventory</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
