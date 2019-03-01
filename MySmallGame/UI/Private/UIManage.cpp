@@ -150,7 +150,7 @@ UUIBase* UUIManage::CreateNativeClassObject(EUIType type, UUserWidget* widget)
 	if (result != nullptr)
 	{
 		result->SetTargtUserWidget(widget);
-		result->InitializeLocalLogic();
+		result->Initialize();
 	}
 
 	return result;

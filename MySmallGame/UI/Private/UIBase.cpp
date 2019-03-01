@@ -2,19 +2,30 @@
 
 #include "../Public/UIBase.h"
 
+#include "GameFramework/PlayerController.h"
+#include "GameFramework/Pawn.h"
+
 UUIBase::UUIBase(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+	: Super(ObjectInitializer),
+	WidgetOwner(nullptr)
 {
-	m_TargetUserWidget = nullptr;
 }
 
-bool UUIBase::parseDotString(TArray<FString>& herichyValue, const FString path)
+void UUIBase::Initialize(UUIWidget* Owner)
+{
+	if (Owner == nullptr) return;
+	WidgetOwner = Owner;
+
+	InitializeLocalLogic();
+}
+
+bool UUIBase::parseDotString(TArray<FString>& HerichyValue, const FString Path)
 {
 	bool returnValue = false;
 
-	path.ParseIntoArray(herichyValue, TEXT("."));
+	Path.ParseIntoArray(HerichyValue, TEXT("."));
 
-	if (herichyValue.Num() == 0)
+	if (HerichyValue.Num() == 0)
 	{
 		//FMessageLog("KayakUIError").Error("UIError::Please check the string format of UIElement's path %s in class %s", *path, this->GetName());
 		return returnValue;
@@ -31,7 +42,7 @@ UWidget* UUIBase::GetImmediateUIElementByName(UWidget* parentWidget, const FStri
 	//if the parentWidget is nullptr which is indicate the UIName is the root slot name
 	if (parentWidget == nullptr)
 	{
-		result = m_TargetUserWidget->WidgetTree->RootWidget;
+		result = GetTargetUserWidget()->WidgetTree->RootWidget;
 
 		if (result == nullptr)
 		{
@@ -80,5 +91,46 @@ UWidget* UUIBase::GetImmediateUIElementByName(UWidget* parentWidget, const FStri
 	return result;
 }
 
+APawn* UUIBase::GetOwningPawn()
+{
+	UUIManage* UUIManage = GetOwningUIManager();
+	if (UUIManage != nullptr)
+	{
+		UUIManage->HUDOwner->GetOwningPawn();
+	}
+	else
+		return nullptr;
+}
 
+APlayerController* UUIBase::GetOwningPlayerController()
+{
+	UUIManage* UUIManage = GetOwningUIManager();
+	if (UUIManage != nullptr)
+	{
+		return UUIManage->HUDOwner->GetOwningPlayerController();
+	}
+	else
+		return nullptr;
+}
+
+UUIManage* UUIBase::GetOwningUIManager()
+{
+	if (WidgetOwner != nullptr)
+	{
+		return WidgetOwner->GetOuter();
+	}
+	else
+		return nullptr;
+}
+
+UUserWidget* GetTargetUserWidget()
+{
+	if (WidgetOwner != nullptr)
+	{
+		return WidgetOwner->UIElement;
+	}
+	else
+		return nullptr;
+}
+}
 

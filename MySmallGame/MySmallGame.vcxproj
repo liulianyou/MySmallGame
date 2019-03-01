@@ -106,6 +106,7 @@
     <ClCompile Include="ui\private\UILogIn.cpp" />
     <ClCompile Include="ui\private\UIManage.cpp" />
     <ClCompile Include="ui\UIInterface.cpp" />
+    <ClCompile Include="UI\UIManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inventory\InventoryInterface.h" />
@@ -118,6 +119,7 @@
     <ClInclude Include="ui\public\UILogIn.h" />
     <ClInclude Include="ui\public\UIManage.h" />
     <ClInclude Include="ui\UIInterface.h" />
+    <ClInclude Include="UI\UIManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

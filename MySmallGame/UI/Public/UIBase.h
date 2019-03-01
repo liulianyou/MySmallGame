@@ -16,8 +16,13 @@
 //UMG Core Head: This will contained all elements that we will used in UI
 #include "UMG.h"
 
+#include "UI/UIManager.h"
 //Automatically generated head file
 #include "UIBase.generated.h"
+
+class UUserWidget;
+class APlayerController;
+class APawn;
 
 UCLASS(Config = UI)
 class KAYAKGAME_API UUIBase : public UObject
@@ -32,9 +37,12 @@ public:
 	*/
 	virtual void InitializeLocalLogic() {};
 
-	//Help function to access private variable;
-	void SetTargtUserWidget(UUserWidget* targetWIdget) { m_TargetUserWidget = targetWIdget; }
-	UUserWidget* GetTargetUserWidget() { return m_TargetUserWidget; }
+	void Initialize( UUIWidget* Owner );
+
+	UUserWidget* GetTargetUserWidget();
+	APlayerController* GetOwningPlayerController();
+	APawn* GetOwningPawn();
+	UUIManage* GetOwningUIManager();
 	
 
 protected:
@@ -89,8 +97,6 @@ private:
 	*/
 	UWidget* GetImmediateUIElementByName(UWidget* parentWidget, const FString UIName);
 
-
-	//Restore the target widget which this class bind with.
-	UUserWidget* m_TargetUserWidget;
-
+private:
+	UUIWidget* WidgetOwner;
 };
