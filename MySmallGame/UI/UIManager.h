@@ -8,6 +8,8 @@
 
 #include "CoreMinimal.h"
 
+#include "UserWidget.h"
+
 #include "UIManager.generated.h"
 
 class AHUD;
