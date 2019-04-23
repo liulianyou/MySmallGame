@@ -1,2 +1,2 @@
 # MySmallGame
-This is my only project to create one game.
+This is my project to create one game.
